@@ -1,15 +1,29 @@
 "use client";
-import { supportedCountries } from "@/lib/currency";
 
-export default function CountrySelect() {
-  const current = document.cookie.match(/(?:^| )country=([^;]+)/)?.[1] || "FR";
-  const change = (c: string) => {
-    document.cookie = `country=${c};path=/;max-age=${60*60*24*365}`;
-    location.reload();
-  };
+import { usePathname } from "next/navigation";
+
+type Props = {
+  current?: "FR" | "US" | "GB";
+};
+
+export default function CountrySelect({ current = "FR" }: Props) {
+  const pathname = usePathname();
+
   return (
-    <select defaultValue={current} onChange={(e)=>change(e.target.value)} className="border rounded px-2 py-1 text-sm">
-      {supportedCountries.map(c => <option key={c.code} value={c.code}>{c.label}</option>)}
-    </select>
+    <form action={"/actions/set-country"} method="post" className="inline-flex items-center gap-2">
+      {/* On envoie vers l'action via une route auto (/app/actions – voir proxy ci-dessous) */}
+      <input type="hidden" name="redirectTo" value={pathname || "/"} />
+      <select
+        name="country"
+        defaultValue={current}
+        onChange={(e) => (e.currentTarget.form as HTMLFormElement)?.requestSubmit()}
+        className="border rounded px-2 py-1 text-sm"
+        aria-label="Choisir le pays"
+      >
+        <option value="FR">🇫🇷 France (EUR)</option>
+        <option value="US">🇺🇸 USA (USD)</option>
+        <option value="GB">🇬🇧 UK (GBP)</option>
+      </select>
+    </form>
   );
 }

@@ -2,35 +2,27 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  const products = Array.from({ length: 8 }).map((_, i) => ({
-    title: `Produit ${i + 1}`,
-    slug: `produit-${i + 1}`,
-    description: `Description du produit ${i + 1}`,
-    imageUrl: `https://picsum.photos/seed/p${i + 1}/800/600`,
-    stock: 5 + i
-  }));
-
-  // Prix de base (FR EUR), avec variations pour US/USD et GB/GBP
-  const basePrice = (i: number) => 1499 + i * 200; // en cents EUR
-  const usd = (eurCents: number) => Math.round(eurCents * 1.1); // approx simple
-  const gbp = (eurCents: number) => Math.round(eurCents * 0.85);
-
-  await prisma.productPrice.deleteMany();
   await prisma.product.deleteMany();
+  await prisma.productPrice.deleteMany();
 
-  for (let i = 0; i < products.length; i++) {
-    const p = await prisma.product.create({ data: products[i] });
-    const eur = basePrice(i);
-    await prisma.productPrice.createMany({
-      data: [
-        { productId: p.id, country: "FR", currency: "EUR", amountCents: eur },
-        { productId: p.id, country: "US", currency: "USD", amountCents: usd(eur) },
-        { productId: p.id, country: "GB", currency: "GBP", amountCents: gbp(eur) },
-      ],
-    });
-  }
+  const p = await prisma.product.create({
+    data: {
+      title: "MassMe appui-tête ergonomique",
+      slug: "massme-appui-tete",
+      description: "Appui-tête ergonomique — housse bambou",
+      imageUrl: "https://picsum.photos/seed/massme/800/600",
+      stock: 50,
+      prices: {
+        create: [
+          { country: "FR", currency: "EUR", amountCents: 8250 },
+          { country: "US", currency: "USD", amountCents: 8999 },
+          { country: "GB", currency: "GBP", amountCents: 6999 },
+        ],
+      },
+    },
+  });
 
-  console.log("Seed multi-pays OK");
+  console.log("Seed OK:", p.slug);
 }
 
 main().finally(() => prisma.$disconnect());

@@ -1,32 +1,38 @@
-generator client {
-  provider = "prisma-client-js"
-}
+model Order {
+  id            String   @id @default(cuid())
+  number        String   @unique
+  status        String   @default("PENDING_PAYMENT")
+  currency      String
+  subtotalCents Int
+  shippingCents Int      @default(0)
+  vatCents      Int      @default(0)
+  totalCents    Int
 
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
+  // Infos client / adresse
+  firstName  String
+  lastName   String
+  email      String
+  phone      String?
+  address1   String
+  address2   String?
+  city       String
+  postalCode String
+  country    String
+  state      String?
 
-model Product {
-  id          String         @id @default(cuid())
-  title       String
-  slug        String         @unique
-  description String?
-  imageUrl    String?
-  stock       Int            @default(0)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  prices      ProductPrice[]
-}
+  // Paiement
+  paymentIntentId   String? @unique
+  checkoutSessionId String? @unique
 
-model ProductPrice {
-  id          String   @id @default(cuid())
-  product     Product  @relation(fields: [productId], references: [id])
-  productId   String
+  // Facturation
+  invoiceNumber String?  @unique
+  invoiceUrl    String?
+  invoicedAt    DateTime?
 
-  country     String   // ISO 3166-1 alpha-2 (FR, US, GB…)
-  currency    String   // ISO 4217 (EUR, USD, GBP…)
-  amountCents Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@unique([productId, country])
+  items OrderItem[]
+
+  @@index([createdAt], map: "Order_createdAt_idx")
 }
